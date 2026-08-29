@@ -12601,13 +12601,33 @@
           "title": "Perspective",
           "description": "A domain-specific view that identifies the types of data relevant to a particular audience and provides optional terminology mappings to facilitate interpretation. Perspectives enable tooling to generate filtered views, translate terminology, and validate document completeness against audience-specific requirements.",
           "additionalProperties": false,
-          "required": [
-            "name",
-            "mappings"
+          "anyOf": [
+            {
+              "$comment": "Reference form: declaring a pre-defined perspective without inline content incorporates the published definition by reference.",
+              "properties": {
+                "predefined": true
+              },
+              "required": [
+                "predefined"
+              ]
+            },
+            {
+              "properties": {
+                "name": true,
+                "mappings": true
+              },
+              "required": [
+                "name",
+                "mappings"
+              ]
+            }
           ],
           "properties": {
             "bom-ref": {
               "$ref": "#/$defs/cyclonedx-common-2.0/$defs/refType"
+            },
+            "predefined": {
+              "$ref": "#/$defs/cyclonedx-perspective-2.0/$defs/preDefinedPerspective"
             },
             "name": {
               "type": "string",
@@ -12647,6 +12667,19 @@
             "properties": {
               "$ref": "#/$defs/cyclonedx-common-2.0/$defs/properties"
             }
+          }
+        },
+        "preDefinedPerspective": {
+          "type": "string",
+          "title": "Pre-Defined Perspective",
+          "description": "Identifies a well-known, pre-defined perspective published in the CycloneDX perspectives catalog. Declaring a pre-defined perspective without inline mappings incorporates the published definition by reference. When inline mappings are also provided, the inline content is authoritative and this identity indicates the well-known perspective it represents, enabling tooling to recognize the perspective without matching on free-text names.",
+          "enum": [
+            "model-card",
+            "pqc-readiness"
+          ],
+          "meta:enum": {
+            "model-card": "A transparency view for machine learning models following the industry-standard model card structure, covering model details, intended use, training data and procedure, quantitative analysis, technical limitations, and ethical and environmental considerations.",
+            "pqc-readiness": "A view for assessing readiness for the post-quantum cryptography migration, covering cryptographic inventory, quantum resistance of the cryptography in use, and cryptographic agility."
           }
         },
         "perspectiveMapping": {
