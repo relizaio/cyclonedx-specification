@@ -3,7 +3,51 @@
   "$id": "http://cyclonedx.org/schema/perspectives-defs.schema.json",
   "$comment": "2026-09-03T00:00:00Z",
   "title": "CycloneDX Pre-Defined Perspectives Registry",
-  "description": "Registry of well-known, pre-defined perspectives. Maps each reserved perspective identity (cdx:perspectives: namespace) to the catalog document that defines it under the repository's perspectives/ directory. This registry is maintained independently of the CycloneDX specification release cycle: perspectives may be added or revised here, and new catalog document versions published, without a change to the versioned specification schemas. The specification schema references only preDefinedPerspectivesEnum; the identity-to-document mapping is in catalog.",
+  "description": "Registry of well-known, pre-defined perspectives. Maps each reserved perspective identity (cdx:perspectives: namespace) to the catalog document that defines it under the repository's perspectives/ directory. This registry is maintained independently of the CycloneDX specification release cycle: entries in the companion data file (perspectives-defs.json) may be added or revised, and new catalog document versions published, without a change to the versioned specification schemas. The specification schema references only preDefinedPerspectivesEnum.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "lastUpdated": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Last Updated",
+      "description": "The date and time (timestamp) when the registry data was last updated."
+    },
+    "perspectives": {
+      "type": "array",
+      "title": "Pre-Defined Perspectives",
+      "description": "The catalog of pre-defined perspectives. Each entry maps a reserved identity to the catalog document defining it.",
+      "items": {
+        "type": "object",
+        "title": "Pre-Defined Perspective Entry",
+        "additionalProperties": false,
+        "properties": {
+          "predefined": {
+            "$ref": "#/definitions/preDefinedPerspectivesEnum",
+            "title": "Pre-Defined Perspective Identity",
+            "description": "The reserved identity of the perspective. Matches the `predefined` field of a perspective in a CycloneDX document."
+          },
+          "file": {
+            "type": "string",
+            "title": "Catalog Document",
+            "description": "Path, relative to the repository root, of the catalog document defining this perspective. The document's `version` is the perspective's version, referenced by `predefinedVersion`."
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "A short description of the perspective."
+          }
+        },
+        "required": [
+          "predefined",
+          "file"
+        ]
+      }
+    }
+  },
   "definitions": {
     "preDefinedPerspectivesEnum": {
       "type": "string",
@@ -13,23 +57,6 @@
         "cdx:perspectives:model-card",
         "cdx:perspectives:pqc-readiness"
       ]
-    },
-    "catalog": {
-      "$comment": "Registry data, expressed with schema keywords so this file remains a single valid JSON Schema. For each identity, `const` is the catalog document path (relative to the repository root) and `description` documents the perspective. Tooling resolves a reference by reading properties.<id>.const.",
-      "title": "Pre-Defined Perspective Catalog",
-      "description": "Maps each pre-defined perspective identity to its catalog document.",
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "cdx:perspectives:model-card": {
-          "const": "perspectives/model-card-perspective.json",
-          "description": "A transparency view for machine learning models following the industry-standard model card structure, covering model details, intended use, training data and procedure, quantitative analysis, technical limitations, and ethical and environmental considerations."
-        },
-        "cdx:perspectives:pqc-readiness": {
-          "const": "perspectives/pqc-readiness-perspective.json",
-          "description": "A view for assessing readiness for the post-quantum cryptography migration, covering cryptographic inventory, quantum resistance of the cryptography in use, and cryptographic agility. Catalog document contributed separately (CycloneDX/specification#960)."
-        }
-      }
     }
   }
 }

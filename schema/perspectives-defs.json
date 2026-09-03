@@ -1,0 +1,16 @@
+{
+  "$schema": "http://cyclonedx.org/schema/perspectives-defs.schema.json",
+  "lastUpdated": "2026-09-03T00:00:00Z",
+  "perspectives": [
+    {
+      "predefined": "cdx:perspectives:model-card",
+      "file": "perspectives/model-card-perspective.json",
+      "description": "A transparency view for machine learning models following the industry-standard model card structure, covering model details, intended use, training data and procedure, quantitative analysis, technical limitations, and ethical and environmental considerations."
+    },
+    {
+      "predefined": "cdx:perspectives:pqc-readiness",
+      "file": "perspectives/pqc-readiness-perspective.json",
+      "description": "A view for assessing readiness for the post-quantum cryptography migration, covering cryptographic inventory, quantum resistance of the cryptography in use, and cryptographic agility. Catalog document contributed separately (CycloneDX/specification#960)."
+    }
+  ]
+}
