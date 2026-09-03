@@ -97,14 +97,14 @@
     "preDefinedPerspective": {
       "type": "string",
       "title": "Pre-Defined Perspective",
-      "description": "Identifies a well-known, pre-defined perspective published in the CycloneDX perspectives catalog, incorporating the published definition by reference and enabling tooling to recognize the perspective without matching on free-text names. A perspective declaring a pre-defined identity shall not provide any inline content other than bom-ref; a perspective defining its own content shall omit this field.",
+      "description": "Identifies a well-known, pre-defined perspective published in the CycloneDX perspectives catalog, incorporating the published definition by reference and enabling tooling to recognize the perspective without matching on free-text names. Values use the reserved `cdx:perspectives:` namespace path and are intended to be declared as part of the reserved CycloneDX property taxonomy. A perspective declaring a pre-defined identity shall not provide any inline content other than bom-ref; a perspective defining its own content shall omit this field.",
       "enum": [
-        "model-card",
-        "pqc-readiness"
+        "cdx:perspectives:model-card",
+        "cdx:perspectives:pqc-readiness"
       ],
       "meta:enum": {
-        "model-card": "A transparency view for machine learning models following the industry-standard model card structure, covering model details, intended use, training data and procedure, quantitative analysis, technical limitations, and ethical and environmental considerations.",
-        "pqc-readiness": "A view for assessing readiness for the post-quantum cryptography migration, covering cryptographic inventory, quantum resistance of the cryptography in use, and cryptographic agility."
+        "cdx:perspectives:model-card": "A transparency view for machine learning models following the industry-standard model card structure, covering model details, intended use, training data and procedure, quantitative analysis, technical limitations, and ethical and environmental considerations.",
+        "cdx:perspectives:pqc-readiness": "A view for assessing readiness for the post-quantum cryptography migration, covering cryptographic inventory, quantum resistance of the cryptography in use, and cryptographic agility."
       }
     },
     "perspectiveMapping": {

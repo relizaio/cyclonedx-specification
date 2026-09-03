@@ -10,7 +10,7 @@
   "perspectives": [
     {
       "bom-ref": "perspective-1",
-      "predefined": "model-card"
+      "predefined": "cdx:perspectives:model-card"
     },
     {
       "bom-ref": "perspective-2",
