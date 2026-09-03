@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://cyclonedx.org/schema/perspectives-defs.schema.json",
+  "$comment": "2026-09-03T00:00:00Z",
+  "title": "CycloneDX Pre-Defined Perspectives Registry",
+  "description": "Registry of well-known, pre-defined perspectives. Maps each reserved perspective identity (cdx:perspectives: namespace) to the catalog document that defines it under the repository's perspectives/ directory. This registry is maintained independently of the CycloneDX specification release cycle: perspectives may be added or revised here, and new catalog document versions published, without a change to the versioned specification schemas. The specification schema references only preDefinedPerspectivesEnum; the identity-to-document mapping is in catalog.",
+  "definitions": {
+    "preDefinedPerspectivesEnum": {
+      "type": "string",
+      "title": "Pre-Defined Perspective Identities",
+      "description": "The reserved identities of well-known, pre-defined perspectives, using the reserved cdx:perspectives: namespace path. Referenced by the specification's perspective schema.",
+      "enum": [
+        "cdx:perspectives:model-card",
+        "cdx:perspectives:pqc-readiness"
+      ]
+    },
+    "catalog": {
+      "$comment": "Registry data, expressed with schema keywords so this file remains a single valid JSON Schema. For each identity, `const` is the catalog document path (relative to the repository root) and `description` documents the perspective. Tooling resolves a reference by reading properties.<id>.const.",
+      "title": "Pre-Defined Perspective Catalog",
+      "description": "Maps each pre-defined perspective identity to its catalog document.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "cdx:perspectives:model-card": {
+          "const": "perspectives/model-card-perspective.json",
+          "description": "A transparency view for machine learning models following the industry-standard model card structure, covering model details, intended use, training data and procedure, quantitative analysis, technical limitations, and ethical and environmental considerations."
+        },
+        "cdx:perspectives:pqc-readiness": {
+          "const": "perspectives/pqc-readiness-perspective.json",
+          "description": "A view for assessing readiness for the post-quantum cryptography migration, covering cryptographic inventory, quantum resistance of the cryptography in use, and cryptographic agility. Catalog document contributed separately (CycloneDX/specification#960)."
+        }
+      }
+    }
+  }
+}

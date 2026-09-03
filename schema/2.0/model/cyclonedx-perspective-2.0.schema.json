@@ -55,7 +55,9 @@
           "$ref": "cyclonedx-common-2.0.schema.json#/$defs/refType"
         },
         "predefined": {
-          "$ref": "#/$defs/preDefinedPerspective"
+          "title": "Pre-Defined Perspective",
+          "description": "Identifies a well-known, pre-defined perspective, incorporating the published definition by reference and enabling tooling to recognize the perspective without matching on free-text names. Values use the reserved `cdx:perspectives:` namespace path and are drawn from the CycloneDX pre-defined perspectives registry (`perspectives-defs.schema.json`), which maps each identity to its catalog document and is maintained independently of the specification release cycle. The specific published revision is selected by the sibling `predefinedVersion`. A perspective declaring a pre-defined identity shall provide `predefinedVersion` and shall not provide any inline content other than bom-ref, so the published definition remains the single source of truth; a perspective defining its own content shall omit both fields.",
+          "$ref": "../../perspectives-defs.schema.json#/definitions/preDefinedPerspectivesEnum"
         },
         "predefinedVersion": {
           "$ref": "#/$defs/preDefinedPerspectiveVersion"
@@ -98,19 +100,6 @@
         "properties": {
           "$ref": "cyclonedx-common-2.0.schema.json#/$defs/properties"
         }
-      }
-    },
-    "preDefinedPerspective": {
-      "type": "string",
-      "title": "Pre-Defined Perspective",
-      "description": "Identifies a well-known, pre-defined perspective published in the CycloneDX perspectives catalog, incorporating the published definition by reference and enabling tooling to recognize the perspective without matching on free-text names. Values use the reserved `cdx:perspectives:` namespace path and are intended to be declared as part of the reserved CycloneDX property taxonomy. The specific published revision is selected by the sibling `predefinedVersion`. A perspective declaring a pre-defined identity shall provide `predefinedVersion` and shall not provide any inline content other than bom-ref, so the published definition remains the single source of truth; a perspective defining its own content shall omit both fields.",
-      "enum": [
-        "cdx:perspectives:model-card",
-        "cdx:perspectives:pqc-readiness"
-      ],
-      "meta:enum": {
-        "cdx:perspectives:model-card": "A transparency view for machine learning models following the industry-standard model card structure, covering model details, intended use, training data and procedure, quantitative analysis, technical limitations, and ethical and environmental considerations.",
-        "cdx:perspectives:pqc-readiness": "A view for assessing readiness for the post-quantum cryptography migration, covering cryptographic inventory, quantum resistance of the cryptography in use, and cryptographic agility."
       }
     },
     "preDefinedPerspectiveVersion": {
