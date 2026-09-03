@@ -17,7 +17,8 @@
           "nativeName": "Cryptographic Inventory",
           "relevance": "required"
         }
-      ]
+      ],
+      "predefinedVersion": 1
     }
   ]
 }
