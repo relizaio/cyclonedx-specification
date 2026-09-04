@@ -16,7 +16,7 @@
     "perspective": {
       "type": "object",
       "title": "Perspective",
-      "description": "A domain-specific view that identifies the types of data relevant to a particular audience and provides optional terminology mappings to facilitate interpretation. Perspectives enable tooling to generate filtered views, translate terminology, and validate document completeness against audience-specific requirements. A perspective applies to the whole document unless it declares scopes, each of which applies it to a part of the document.",
+      "description": "A domain-specific view that identifies the types of data relevant to a particular audience and provides optional terminology mappings to facilitate interpretation. Perspectives enable tooling to generate filtered views, translate terminology, and validate document completeness against audience-specific requirements. A perspective is either a published pre-defined perspective applied by identity (`predefined`), a perspective definition applied by reference (`ref`), or defined inline. It applies to the whole document unless it declares scopes, each of which applies it to a part of the document.",
       "additionalProperties": false,
       "oneOf": [
         {
@@ -30,7 +30,8 @@
             "domains": false,
             "mappings": false,
             "externalReferences": false,
-            "properties": false
+            "properties": false,
+            "ref": false
           },
           "required": [
             "predefined",
@@ -38,12 +39,31 @@
           ]
         },
         {
-          "$comment": "Inline form: the perspective is fully defined in the document and shall not declare a pre-defined identity or version.",
+          "$comment": "Definition reference form: the perspective is a definition declared under definitions.perspectives (or in another document via BOM-Link), applied by reference. Only bom-ref and scopes may accompany the reference, so the definition remains the single source of truth while the document decides where it applies.",
+          "properties": {
+            "ref": true,
+            "predefined": false,
+            "predefinedVersion": false,
+            "scopes": true,
+            "name": false,
+            "description": false,
+            "domains": false,
+            "mappings": false,
+            "externalReferences": false,
+            "properties": false
+          },
+          "required": [
+            "ref"
+          ]
+        },
+        {
+          "$comment": "Inline form: the perspective is fully defined in the document and shall not declare a pre-defined identity, version, or definition reference.",
           "properties": {
             "predefined": false,
             "predefinedVersion": false,
             "name": true,
-            "mappings": true
+            "mappings": true,
+            "ref": false
           },
           "required": [
             "name",
@@ -62,6 +82,20 @@
         },
         "predefinedVersion": {
           "$ref": "#/$defs/preDefinedPerspectiveVersion"
+        },
+        "ref": {
+          "title": "Perspective Definition Reference",
+          "description": "Reference using bom-link or bom-ref to a perspective definition declared under `definitions.perspectives`, applying that definition here. A perspective declaring a reference shall not provide any inline content other than bom-ref and scopes, so the definition remains the single source of truth.",
+          "anyOf": [
+            {
+              "title": "Ref",
+              "$ref": "cyclonedx-common-2.0.schema.json#/$defs/refLinkType"
+            },
+            {
+              "title": "BOM-Link Element",
+              "$ref": "cyclonedx-common-2.0.schema.json#/$defs/bomLinkElementType"
+            }
+          ]
         },
         "name": {
           "type": "string",
@@ -106,6 +140,30 @@
         }
       }
     },
+    "perspectiveDefinition": {
+      "title": "Perspective Definition",
+      "description": "A reusable inline perspective declared under `definitions.perspectives`. It carries a bom-ref so it can be applied by reference, and declares no pre-defined identity, definition reference, or scopes: scopes belong to each application.",
+      "allOf": [
+        {
+          "$ref": "#/$defs/perspective"
+        },
+        {
+          "type": "object",
+          "$comment": "This is a mixin over the referenced perspective schema, which enforces strictness (additionalProperties: false); this branch only forbids the application-specific fields and requires bom-ref.",
+          "additionalProperties": true,
+          "properties": {
+            "bom-ref": true,
+            "predefined": false,
+            "predefinedVersion": false,
+            "ref": false,
+            "scopes": false
+          },
+          "required": [
+            "bom-ref"
+          ]
+        }
+      ]
+    },
     "preDefinedPerspectiveVersion": {
       "type": "integer",
       "title": "Pre-Defined Perspective Version",
@@ -115,7 +173,7 @@
     "perspectiveScopes": {
       "type": "array",
       "title": "Perspective Scopes",
-      "description": "The parts of the document this perspective applies to. Each scope is an independent application of the perspective: tooling generates one view and one completeness evaluation per scope. Omitting scopes applies the perspective to the whole document. A scope selects a set of nodes, resolved as follows: (1) evaluate each expression from the document root and select every node it identifies; (2) select the node identified by each target, resolving bom-ref values within this document; (3) for every reference entry within the subtrees of the nodes selected so far, that is, an object whose `ref` property identifies an object elsewhere in this document, also select the referenced node, once, without following references found in that node in turn; (4) the scope is the union of the subtrees of the selected nodes. A node is within a scope when its normalized path, as defined by JSONPath, starts with the normalized path of a selected node. BOM-Links to other documents are recorded but not followed. Scopes are applied at the reference or inline perspective in the document; a published pre-defined perspective declares no scopes of its own.",
+      "description": "The parts of the document this perspective applies to. Each scope is an independent application of the perspective: tooling generates one view and one completeness evaluation per scope. Omitting scopes applies the perspective to the whole document. A scope selects a set of nodes, resolved as follows: (1) evaluate each expression from the document root and select every node it identifies; (2) select the node identified by each target, resolving bom-ref values within this document; (3) for every reference entry within the subtrees of the nodes selected so far, that is, an object whose `ref` property identifies an object elsewhere in this document, also select the referenced node, once, without following references found in that node in turn; (4) the scope is the union of the subtrees of the selected nodes. A node is within a scope when its normalized path, as defined by JSONPath, starts with the normalized path of a selected node. BOM-Links to other documents are recorded but not followed. Scopes are applied at the perspective in the document, whether it applies a pre-defined perspective, applies a definition by reference, or is defined inline; a published pre-defined perspective and a perspective definition declare no scopes of their own.",
       "minItems": 1,
       "items": {
         "$ref": "#/$defs/perspectiveScope"
@@ -173,7 +231,10 @@
           },
           "examples": [
             [
-              "$.components[?(@.type=='machine-learning-model' && @.group=='text')]"
+              "$.definitions.components[?(@.type=='machine-learning-model' && @.group=='text')]"
+            ],
+            [
+              "$.inventories[?(@['bom-ref']=='inv-vision')]"
             ]
           ]
         },
@@ -203,10 +264,10 @@
           "title": "Path Expression",
           "description": "A [JSONPath](https://datatracker.ietf.org/doc/html/rfc9535) expression, evaluated from the document root, that identifies the types of data relevant to this perspective. When the perspective is applied to a scope, only the identified nodes within the scope are selected; when the mapping declares traversal steps, only those within the nodes the steps produce.",
           "examples": [
-            "$.components[*].pedigree",
-            "$.components[?(@.type=='machine-learning-model')].modelCard",
+            "$.inventories[*].components[*].pedigree",
+            "$.inventories[*].components[?(@.type=='machine-learning-model')].modelProperties",
             "$..[?(@.type=='machine-learning-model')].modelProperties",
-            "$.components[?(@.type=='cryptographic-asset')]",
+            "$.definitions.components[?(@.type=='cryptographic-asset')]",
             "$.vulnerabilities"
           ]
         },

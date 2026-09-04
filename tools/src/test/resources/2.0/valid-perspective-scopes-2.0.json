@@ -7,6 +7,34 @@
   "metadata": {
     "timestamp": "2026-09-04T12:00:00Z"
   },
+  "definitions": {
+    "perspectives": [
+      {
+        "bom-ref": "def-crypto-in-use",
+        "name": "Cryptography in Use",
+        "description": "A reusable perspective definition, applied below at two scopes.",
+        "domains": [
+          "cryptographic-security"
+        ],
+        "mappings": [
+          {
+            "expression": "$.components[?(@.type=='cryptographic-asset')]",
+            "via": [
+              {
+                "dependencies": "depends-on",
+                "transitive": true
+              },
+              {
+                "dependencies": "provides"
+              }
+            ],
+            "nativeName": "Algorithms in Use",
+            "relevance": "required"
+          }
+        ]
+      }
+    ]
+  },
   "components": [
     {
       "bom-ref": "model-vision",
@@ -125,6 +153,24 @@
           ],
           "nativeName": "Training Data",
           "relevance": "recommended"
+        }
+      ]
+    },
+    {
+      "bom-ref": "crypto-per-model",
+      "ref": "def-crypto-in-use",
+      "scopes": [
+        {
+          "name": "Vision model",
+          "targets": [
+            "model-vision"
+          ]
+        },
+        {
+          "name": "Text models",
+          "expressions": [
+            "$.components[?(@.type=='machine-learning-model' && @.group=='text')]"
+          ]
         }
       ]
     }
