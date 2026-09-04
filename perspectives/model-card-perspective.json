@@ -27,6 +27,14 @@
           "rationale": "A model card is meaningless without stating which model, and which revision of it, the card describes."
         },
         {
+          "expression": "$..[?(@.type=='machine-learning-model')].identifiers",
+          "nativeName": "Model Identifiers",
+          "nativeDescription": "Identifiers under which the model is published or catalogued, such as a Package-URL for a model hub entry, grouped by the party asserting them.",
+          "relevance": "recommended",
+          "weight": 0.7,
+          "rationale": "Name and version alone are ambiguous across hubs and forks; asserted identifiers let a card be matched to the published artefact."
+        },
+        {
           "expression": "$..[?(@.type=='machine-learning-model')].parties[?(@.roles[?(@.role=='supplier')])]",
           "nativeName": "Developed By",
           "nativeDescription": "The organization or individuals responsible for developing and supplying the model.",
@@ -91,17 +99,69 @@
           "rationale": "Training data provenance is central to assessing bias, capability boundaries, and data protection obligations."
         },
         {
-          "expression": "$..[?(@.type=='data')]",
+          "expression": "$.formulation[*]",
+          "via": [
+            {
+              "refs": "$..[?(@.type=='machine-learning-model')].modelProperties.training.formula"
+            }
+          ],
+          "nativeName": "Training Procedure",
+          "nativeDescription": "The formula describing how the model was trained: its workflows and tasks, such as pre-training, fine-tuning, and alignment stages, and the data each consumed.",
+          "relevance": "recommended",
+          "weight": 0.7,
+          "rationale": "Training stages and the datasets each consumed show how the data was used, which a description of the datasets alone cannot convey."
+        },
+        {
+          "expression": "$..[?(@.type=='data')]['name','version','identifiers','licenses']",
           "via": [
             {
               "refs": "$..[?(@.type=='machine-learning-model')].modelProperties.training.datasets[*]"
             }
           ],
-          "nativeName": "Datasets",
-          "nativeDescription": "Dataset components, typically referenced from the model's training information, carrying dataset composition, governance, and sensitive-data declarations.",
+          "nativeName": "Dataset Identity and Licensing",
+          "nativeDescription": "Which dataset was used, at which version, under which identifiers and licence terms.",
+          "relevance": "required",
+          "weight": 0.8,
+          "rationale": "A dataset a model card reader cannot identify or check licence terms for cannot be assessed; identity and licensing are the minimum the EU AI Act's data documentation expects."
+        },
+        {
+          "expression": "$..[?(@.type=='data')].data[*]['type','description','contents']",
+          "via": [
+            {
+              "refs": "$..[?(@.type=='machine-learning-model')].modelProperties.training.datasets[*]"
+            }
+          ],
+          "nativeName": "Dataset Description and Contents",
+          "nativeDescription": "What the dataset is: its general theme, a description of its size and role, and its contents or where they are held.",
           "relevance": "recommended",
           "weight": 0.6,
-          "rationale": "Training references resolve to components of type data; the dataset detail a card reader needs lives on those components."
+          "rationale": "Describing composition and contents lets a reader judge coverage and representativeness of the training data."
+        },
+        {
+          "expression": "$..[?(@.type=='data')].data[*]['classification','sensitiveData']",
+          "via": [
+            {
+              "refs": "$..[?(@.type=='machine-learning-model')].modelProperties.training.datasets[*]"
+            }
+          ],
+          "nativeName": "Dataset Classification and Sensitive Data",
+          "nativeDescription": "The protection level the dataset requires and any sensitive or personal data it contains.",
+          "relevance": "recommended",
+          "weight": 0.7,
+          "rationale": "Sensitive-data declarations drive data protection obligations and are a primary concern of AI regulation."
+        },
+        {
+          "expression": "$..[?(@.type=='data')].data[*].governance",
+          "via": [
+            {
+              "refs": "$..[?(@.type=='machine-learning-model')].modelProperties.training.datasets[*]"
+            }
+          ],
+          "nativeName": "Dataset Governance",
+          "nativeDescription": "The parties accountable for the dataset through its lifecycle: owners, stewards, and custodians.",
+          "relevance": "recommended",
+          "weight": 0.5,
+          "rationale": "Governance names who is accountable for the data, which regulators and downstream users need to trace provenance and responsibility."
         },
         {
           "expression": "$..[?(@.type=='machine-learning-model')].modelProperties.evaluation",
