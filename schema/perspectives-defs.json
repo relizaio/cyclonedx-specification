@@ -1,6 +1,6 @@
 {
   "$schema": "http://cyclonedx.org/schema/perspectives-defs.schema.json",
-  "lastUpdated": "2026-09-04T14:29:28Z",
+  "lastUpdated": "2026-09-04T15:26:05Z",
   "perspectives": [
     {
       "predefined": "cdx:perspectives:model-card",
@@ -10,9 +10,9 @@
       "versions": [
         {
           "version": 1,
-          "sha256": "2384eeec5b059d880dcfc94831a9bad2110bfa081eec31757896a39289d5fbab",
-          "commit": "73b72f0d390ec39acab8f605f91cbc388bd2db97",
-          "date": "2026-09-04T14:29:28Z"
+          "sha256": "1ffe9fe3cf91e491a269c0c97d0c27659a98212add7525ad67e49f972b5c8fe5",
+          "commit": "c60f783eab4eafa3eee79431a937827cd970857b",
+          "date": "2026-09-04T15:26:05Z"
         }
       ]
     }
