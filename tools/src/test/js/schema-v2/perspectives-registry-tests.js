@@ -5,23 +5,32 @@
  * call the script via `node -- <this-file>`
  *
  * The registry is not tied to a CycloneDX version: it lives at the schema root
- * (schema/perspectives-defs.json) and is governed by schema/perspectives-defs.schema.json,
- * whose `preDefinedPerspectivesEnum` is referenced by the versioned perspective schema.
- * The data file is maintained by hand (no generator), so this test asserts:
- *  - the data file validates against its governing schema
- *  - the hand-maintained enum and the data entries are the same set, without duplicates
- *  - every entry points into the perspectives/ catalog directory; an existing catalog
- *    document must be a JSON document with an integer `version` (the value referenced
- *    by `predefinedVersion`) and must not itself declare a `predefined` identity
+ * (schema/perspectives-defs.json, generated) and is governed by
+ * schema/perspectives-defs.schema.json, whose hand-maintained `preDefinedPerspectivesEnum`
+ * is referenced by the versioned perspective schema. This test asserts:
+ *  - the registry data validates against its governing schema
+ *  - every registered identity is in the enum, without duplicates on either side;
+ *    entries follow the naming convention and list contiguous versions from 1
+ *  - for every identity in the enum, the catalog document (perspectives/<name>-perspective.json)
+ *    is in an acceptable state relative to the registry: reserved (no document yet), new
+ *    (version 1, not registered), unchanged (registered content), or pending (registered
+ *    latest + 1). A document changed at an already registered version, a regressed or
+ *    skipped version, or a removed registered document fails.
+ * Shared logic lives in tools/src/main/js/perspectives-registry/perspectives-registry.js.
  */
 
 import {readFile, stat} from 'node:fs/promises'
-import {dirname, join, normalize, sep} from 'node:path'
+import {dirname, join} from 'node:path'
 import {fileURLToPath} from 'node:url'
 
 import Ajv2020 from "ajv/dist/2020.js"
 import draft7MetaSchema from "ajv/dist/refs/json-schema-draft-07.json" with {type: "json"};
 import addFormats from 'ajv-formats'
+
+import {
+    REGISTRY_DATA_FILE, REGISTRY_SCHEMA_FILE, State, OK_STATES,
+    assess, entryProblems, identitiesOf, readCatalogDocument,
+} from '../../../main/js/perspectives-registry/perspectives-registry.js'
 
 
 const _thisDir = dirname(fileURLToPath(import.meta.url))
@@ -29,11 +38,8 @@ const _thisDir = dirname(fileURLToPath(import.meta.url))
 // region config
 
 const repoRootDir = join(_thisDir, '..', '..', '..', '..', '..')
-const schemaRootDir = join(repoRootDir, 'schema')
-const registrySchemaFile = join(schemaRootDir, 'perspectives-defs.schema.json')
-const registryDataFile = join(schemaRootDir, 'perspectives-defs.json')
-const catalogDir = 'perspectives'
-const enumPointer = ['definitions', 'preDefinedPerspectivesEnum', 'enum']
+const registrySchemaFile = join(repoRootDir, REGISTRY_SCHEMA_FILE)
+const registryDataFile = join(repoRootDir, REGISTRY_DATA_FILE)
 
 for (const file of [registrySchemaFile, registryDataFile]) {
     if (!await stat(file).then(s => s.isFile()).catch(() => false)) {
@@ -69,6 +75,7 @@ console.log('\n> validate registry data against its governing schema ...')
     const ajv = new Ajv2020({
         verbose: true,
         addUsedSchema: false,
+        keywords: ["meta:enum"],
         strict: true,
         strictSchema: true,
         strictNumbers: true,
@@ -99,91 +106,68 @@ console.log('\n> validate registry data against its governing schema ...')
 
 // endregion schema conformance
 
-// region enum <-> data consistency
+// region registry entries
 
-console.log('\n> compare governing-schema enum with registry data entries ...')
+console.log('\n> check registry entries against the enum and the naming convention ...')
+const identities = identitiesOf(registrySchema)
+const entries = Array.isArray(registryData.perspectives) ? registryData.perspectives : []
+const entryById = new Map()
 {
-    const enumValues = enumPointer.reduce((node, key) => node?.[key], registrySchema)
-    if (!Array.isArray(enumValues)) {
-        fail(`missing enum at /${enumPointer.join('/')}`, '\n  in file:', `file://${registrySchemaFile}`)
-    } else {
-        const entries = Array.isArray(registryData.perspectives) ? registryData.perspectives : []
-        const entryIds = entries.map(e => e?.predefined)
-
-        const dupEnum = enumValues.filter((v, i) => enumValues.indexOf(v) !== i)
-        if (dupEnum.length > 0) {
-            fail('duplicate values in enum', dupEnum)
+    const dupEnum = identities.filter((v, i) => identities.indexOf(v) !== i)
+    if (dupEnum.length > 0) {
+        fail('duplicate values in enum', dupEnum, '\n  in file:', `file://${registrySchemaFile}`)
+    }
+    let entryErrors = 0
+    for (const entry of entries) {
+        if (entryById.has(entry?.predefined)) {
+            ++entryErrors
+            fail('duplicate registry entry for', entry.predefined)
+            continue
         }
-        const dupIds = entryIds.filter((v, i) => entryIds.indexOf(v) !== i)
-        if (dupIds.length > 0) {
-            fail('duplicate `predefined` identities in registry data', dupIds)
+        entryById.set(entry?.predefined, entry)
+        if (!identities.includes(entry?.predefined)) {
+            ++entryErrors
+            fail('registered identity is not in the enum:', entry?.predefined, '\n  add it to', `file://${registrySchemaFile}`)
         }
-
-        const enumSet = new Set(enumValues)
-        const idSet = new Set(entryIds)
-        const enumOnly = enumValues.filter(v => !idSet.has(v))
-        const dataOnly = entryIds.filter(v => !enumSet.has(v))
-        if (enumOnly.length > 0) {
-            fail('enum values without a registry data entry', enumOnly,
-                '\n  add an entry to', `file://${registryDataFile}`)
+        const problems = entryProblems(entry)
+        if (problems.length > 0) {
+            ++entryErrors
+            fail(`registry entry ${entry?.predefined}:`, '\n  - ' + problems.join('\n  - '))
         }
-        if (dataOnly.length > 0) {
-            fail('registry data entries not listed in the enum', dataOnly,
-                '\n  add them to', `file://${registrySchemaFile}`)
-        }
-        if (dupEnum.length === 0 && dupIds.length === 0 && enumOnly.length === 0 && dataOnly.length === 0) {
-            console.log('OK.', enumValues.length, 'identities')
-        }
+    }
+    if (dupEnum.length === 0 && entryErrors === 0) {
+        console.log('OK.', entries.length, 'registered of', identities.length, 'identities')
     }
 }
 
-// endregion enum <-> data consistency
+// endregion registry entries
 
 // region catalog documents
 
-console.log('\n> check catalog documents referenced by registry entries ...')
-for (const entry of (Array.isArray(registryData.perspectives) ? registryData.perspectives : [])) {
-    const id = entry?.predefined
-    const file = entry?.file
-    console.log('\ntest', id, '->', file, '...')
-    if (typeof file !== 'string') {
-        // already reported by schema conformance
-        continue
-    }
-    if (!normalize(file).startsWith(`${catalogDir}${sep}`)) {
-        fail(`catalog document of ${id} is not under ${catalogDir}/`, '\n  file:', file)
-        continue
-    }
-    const filePath = join(repoRootDir, file)
-    if (!await stat(filePath).then(s => s.isFile()).catch(() => false)) {
-        // an identity may be reserved before its catalog document is contributed
-        console.warn(`WARNING: catalog document of ${id} does not exist (yet):`, `file://${filePath}`)
-        continue
-    }
-    let doc
+console.log('\n> check catalog documents against the registry ...')
+for (const identity of identities) {
+    let catalog
     try {
-        doc = JSON.parse(await readFile(filePath, 'utf-8'))
+        catalog = await readCatalogDocument(repoRootDir, identity)
     } catch (err) {
-        fail(`catalog document of ${id} is not valid JSON`, '\n  file:', `file://${filePath}`, '\n  error:', String(err))
+        fail(`${identity}:`, String(err.message))
         continue
     }
-    if (!Number.isInteger(doc?.version) || doc.version < 1) {
-        fail(`catalog document of ${id} must declare an integer \`version\` >= 1 (the value referenced by \`predefinedVersion\`)`,
-            '\n  file:', `file://${filePath}`, '\n  version:', doc?.version)
+    console.log('\ntest', identity, '->', catalog.file, '...')
+    if (catalog.problems.length > 0) {
+        fail(`catalog document of ${identity}:`, '\n  file:', `file://${catalog.path}`, '\n  - ' + catalog.problems.join('\n  - '))
         continue
     }
-    const perspectives = Array.isArray(doc.perspectives) ? doc.perspectives : []
-    if (perspectives.length === 0) {
-        fail(`catalog document of ${id} defines no perspectives`, '\n  file:', `file://${filePath}`)
-        continue
+    const {state, detail} = assess(catalog, entryById.get(identity))
+    if (!OK_STATES.has(state)) {
+        fail(`${identity} is ${state}:`, detail, '\n  file:', `file://${catalog.path}`)
+    } else if (state === State.RESERVED) {
+        console.warn(`WARNING: ${identity} is reserved:`, detail)
+    } else if (state === State.UNCHANGED) {
+        console.log('OK.', detail)
+    } else {
+        console.log(`OK (${state}).`, detail, '- the registry generator will register it after merge')
     }
-    const withIdentity = perspectives.filter(p => p?.predefined !== undefined || p?.predefinedVersion !== undefined)
-    if (withIdentity.length > 0) {
-        fail(`catalog document of ${id} must define its perspective inline, not by pre-defined reference`,
-            '\n  file:', `file://${filePath}`, '\n  offending:', withIdentity.map(p => p['bom-ref'] ?? p.name))
-        continue
-    }
-    console.log('OK.', 'version', doc.version)
 }
 
 // endregion catalog documents
