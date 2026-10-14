@@ -1,8 +1,7 @@
 "use strict";
 
 /**
- * validate the pre-defined perspectives registry.
- * call the script via `node -- <this-file>`
+ * Check the pre-defined perspectives registry: `npm test` in this tool's directory.
  *
  * The registry is not tied to a CycloneDX version: it lives at the schema root
  * (schema/perspectives-defs.json, generated) and is governed by
@@ -16,7 +15,7 @@
  *    (version 1, not registered), unchanged (registered content), or pending (registered
  *    latest + 1). A document changed at an already registered version, a regressed or
  *    skipped version, or a removed registered document fails.
- * Shared logic lives in tools/src/main/js/perspectives-registry/perspectives-registry.js.
+ * Shared logic with the generator lives in ../perspectives-registry.js.
  */
 
 import {readFile, stat} from 'node:fs/promises'
@@ -30,14 +29,14 @@ import addFormats from 'ajv-formats'
 import {
     REGISTRY_DATA_FILE, REGISTRY_SCHEMA_FILE, State, OK_STATES,
     assess, entryProblems, identitiesOf, readCatalogDocument,
-} from '../../../main/js/perspectives-registry/perspectives-registry.js'
+} from '../perspectives-registry.js'
 
 
 const _thisDir = dirname(fileURLToPath(import.meta.url))
 
 // region config
 
-const repoRootDir = join(_thisDir, '..', '..', '..', '..', '..')
+const repoRootDir = join(_thisDir, '..', '..', '..', '..', '..', '..')
 const registrySchemaFile = join(repoRootDir, REGISTRY_SCHEMA_FILE)
 const registryDataFile = join(repoRootDir, REGISTRY_DATA_FILE)
 

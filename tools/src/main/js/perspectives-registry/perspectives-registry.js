@@ -3,8 +3,8 @@
 /**
  * Shared logic for the CycloneDX pre-defined perspectives registry.
  *
- * Used by the generator (tools/src/main/js/perspectives-registry) and by the
- * schema-v2 test suite, so that both hash catalog documents and judge
+ * Used by the generator (generate-perspectives-registry.js) and by the
+ * registry check (test/run.js), so that both hash catalog documents and judge
  * version states the same way.
  *
  * Conventions:
