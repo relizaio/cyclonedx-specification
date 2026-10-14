@@ -165,7 +165,7 @@
         "expressions": {
           "type": "array",
           "title": "Path Expressions",
-          "description": "[JSONPath](https://datatracker.ietf.org/doc/html/rfc9535) expressions, evaluated from the document root, that identify the nodes whose subtrees form this scope.",
+          "description": "[JSONPath](https://datatracker.ietf.org/doc/html/rfc9535) expressions, evaluated from the document root, that identify the nodes whose subtrees form this scope. Every expression is evaluated, and the scope includes the nodes selected by each of them.",
           "minItems": 1,
           "uniqueItems": true,
           "items": {
@@ -183,7 +183,7 @@
         "targets": {
           "type": "array",
           "title": "Targets",
-          "description": "References using bom-link or bom-ref to the objects whose subtrees form this scope, such as a component or, where the document declares inventories, an inventory.",
+          "description": "References using bom-link or bom-ref to the objects whose subtrees form this scope, such as a component or, where the document declares inventories, an inventory. Every target is resolved, and the scope includes each referenced object, together with the nodes selected by any expressions.",
           "minItems": 1,
           "uniqueItems": true,
           "items": {
