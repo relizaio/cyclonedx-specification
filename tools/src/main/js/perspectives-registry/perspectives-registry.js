@@ -30,7 +30,7 @@ export const CATALOG_DIR = 'perspectives'
 export const CATALOG_FILE_SUFFIX = '-perspective.json'
 export const REGISTRY_SCHEMA_FILE = join('schema', 'perspectives-defs.schema.json')
 export const REGISTRY_DATA_FILE = join('schema', 'perspectives-defs.json')
-export const ENUM_POINTER = Object.freeze(['definitions', 'preDefinedPerspectivesEnum', 'enum'])
+export const ENUM_POINTER = Object.freeze(['$defs', 'preDefinedPerspectivesEnum', 'enum'])
 
 /**
  * Version states of a catalog document relative to the registry.

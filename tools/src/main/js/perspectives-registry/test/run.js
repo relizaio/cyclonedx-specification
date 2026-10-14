@@ -23,7 +23,6 @@ import {dirname, join} from 'node:path'
 import {fileURLToPath} from 'node:url'
 
 import Ajv2020 from "ajv/dist/2020.js"
-import draft7MetaSchema from "ajv/dist/refs/json-schema-draft-07.json" with {type: "json"};
 import addFormats from 'ajv-formats'
 
 import {
@@ -83,8 +82,6 @@ console.log('\n> validate registry data against its governing schema ...')
         strictRequired: true,
         validateFormats: true,
     });
-    // the registry schema is draft-07
-    ajv.addMetaSchema(draft7MetaSchema);
     addFormats(ajv)
     let validate
     try {
